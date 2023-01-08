@@ -1,6 +1,5 @@
 import arc from "@architect/functions";
 import cuid from "cuid";
-
 import type { User } from "./user.server";
 
 export type Note = {
@@ -23,9 +22,8 @@ export async function getNote({
   userId,
 }: Pick<Note, "id" | "userId">): Promise<Note | null> {
   const db = await arc.tables();
-
   const result = await db.note.get({ pk: userId, sk: idToSk(id) });
-
+  
   if (result) {
     return {
       userId: result.pk,
