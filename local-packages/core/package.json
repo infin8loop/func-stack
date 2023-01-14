@@ -2,7 +2,9 @@
     "name": "core",
     "private": true,
     "sideEffects": false,
-    "scripts": {},
+    "scripts": {
+        "test": "vitest"        
+    },
     "prettier": {},
     "eslintIgnore": [
         "/node_modules"
@@ -18,5 +20,8 @@
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "tiny-invariant": "^1.2.0"
+    },
+    "devDependencies": {
+        "vitest": "^0.27.0"
     }
 }

@@ -1,14 +1,14 @@
-import { Repository } from "../core/repository";
+import { FilterParameter, Repository } from "../core/repository";
 import CosmosRepository from "../core/cosmos";
-import { Note } from "./model";
+import { Note, NoteRepository } from "./model";
 
-export class CosmosNoteRepository extends CosmosRepository<Note> {
+export class CosmosNoteRepository 
+    implements EntityReader<Note>, EntityWriter<Note> 
+    extends CosmosRepository<Note> {
 
-    public async list(filter: [FilterParameter]): Promise<Enumerable<T>> {
-        return base.query(`select * from ${this.container.name} where userId=@userId`
+    public async list(filter: [FilterParameter]): Promise<ReadonlyArray<Note>> {
+        return super.query(`select * from ${this.containerName} where userId=@userId`
             , CosmosRepository.queryParameters(filter));
     }
-
-    
 }
 

@@ -1,12 +1,12 @@
-import { Repository } from "./repository";
+import { FilterParameter, Repository } from "./repository";
 import { CosmosClient, Container, CosmosClientOptions, Database, ItemDefinition, SqlParameter, ResourceResponse } from "@azure/cosmos";
 
 export default abstract class CosmosRepository<T extends ItemDefinition> implements Repository<T> {
-    private _client : CosmosClient | null = null;
-    private _database : Database | null = null;
-    private _container : Container | null = null;
+    protected _client : CosmosClient | null = null;
+    protected _database : Database | null = null;
+    protected _container : Container | null = null;
 
-    constructor(connection: string | CosmosClientOptions | CosmosClient, database: string, container : string) {
+    constructor(connection: string | CosmosClientOptions | CosmosClient, protected databaseName: string, protected containerName : string) {
         if (!this._client) {
             if (typeof connection === "string") {
                 this._client = new CosmosClient(connection as string);
@@ -21,11 +21,17 @@ export default abstract class CosmosRepository<T extends ItemDefinition> impleme
         if (!this._client) {
             throw new Error("Failed to connect to database.  Check connection constructor arguments.");
         }
-        this._database = this._client.database(database);
-        this._container = this._database.container(container);
+        this._database = this._client.database(databaseName);
+        this._container = this._database.container(containerName);
+    }
+    update(item: T): Promise<T> {
+        throw new Error("Method not implemented.");
+    }
+    upsert(item: T): Promise<T> {
+        throw new Error("Method not implemented.");
     }
 
-    private get container() : Container { 
+    protected get container() : Container { 
         if (this._container) return this._container
         else throw new Error("CosmosRepository containter reference not set.");
     }
@@ -45,24 +51,24 @@ export default abstract class CosmosRepository<T extends ItemDefinition> impleme
         return statusCode;
     }
 
-    protected async query(query: string, paramters: [SqlParameter]): Promise<Enumerable<T>> {
+    protected async query(query: string, parameters: [SqlParameter]): Promise<ReadonlyArray<T>> {
         const querySpec = { query, parameters };
-        const { resources } = await container.items.query(querySpec).fetchAll();  
+        const { resources } = await this.container.items.query(querySpec).fetchAll();  
         return resources;    
     }
     
     protected static queryParameters(filter: [FilterParameter]) : [SqlParameter] {
         throw new Error("Not implemented");
-        const result : [SqlParameter] = [];
-        for (let param in filter) {
-            for (let name of param) {
-                result.push({ name: `@${name}`, value: param[name] });
-            }
-        }
-        return result;
+        // const result : [SqlParameter] = [];
+        // for (let param in filter) {
+        //     for (let name of param) {
+        //         result.push({ name: `@${name}`, value: param[name] });
+        //     }
+        // }
+        // return result;
     }
 
-    public abstract async list(filter: [FilterParameter]): Promise<Enumerable<T>>;
+    public abstract list(filter: [FilterParameter]): Promise<ReadonlyArray<T>>;
     /* e.g. {
             return base.query(`select * from ${this.container.name} where userId=@userId`
             , CosmosRepository.queryParameters(filter)); }

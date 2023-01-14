@@ -6,14 +6,32 @@ export type Entity = {
     [key: string]: any;
 }
 
-export interface Repository<T> {
-  create(item: T): Promise<T>;
+export interface EntityReader<T> {
   read(id: string): Promise<T | null>;
+}
+
+export interface EntityWriter<T> {
+  create(item: T): Promise<T>;
   update(item: T): Promise<T>;
   upsert(item: T): Promise<T>;
-  list(filter: [FilterParameter]): Promise<<T>>; // e.g. this.list({ where { userId: { equals : '7' } } } );
   delete(id: string): Promise<any>;
 }
+export interface EntityQuery<T> {
+  list(filter: [FilterParameter]): Promise<ReadonlyArray<T>>; // e.g. this.list({ where { userId: { equals : '7' } } } );
+}
+
+export interface Repository<T> implements EntityReader<T>, EntityWriter<T>, EntityQuery<T> {};
+
+// export interface Repository<T> {
+//   create(item: T): Promise<T>;
+//   read(id: string): Promise<T | null>;
+//   update(item: T): Promise<T>;
+//   upsert(item: T): Promise<T>;
+//   list(filter: [FilterParameter]): Promise<ReadonlyArray<T>>; // e.g. this.list({ where { userId: { equals : '7' } } } );
+//   delete(id: string): Promise<any>;
+// }
+
+export type Scalar = string | number | Date;
 
 export interface FilterParameter {
   [index: string]: Scalar;    
@@ -21,11 +39,9 @@ export interface FilterParameter {
 
 export interface Schema<T> {
   parse(data: unknown): T;
-  safeParse(data: unknown): { success: true; data: T; } | { success: false; error: SchemaError; }
 }
 
 export interface SchemaError extends Error {
-
 }
 
 export interface SchemaOnReadError<T> extends SchemaError {
@@ -33,52 +49,45 @@ export interface SchemaOnReadError<T> extends SchemaError {
   data: T;
 }
 
-export class RespositoryBase<T> implements Repository<T> {
-  constructor(schema: Schema = null) {
-    this._schema = schema;
+export abstract class RepositoryBase<T> implements Repository<T> {
+  constructor(private schema: Schema<T> | null = null) {}
+
+  protected parse(data: T): Promise<T> {
+    const result = this.schema?.parse(data) || data;
+    return new Promise((resolve) => resolve(result));
   }
 
-  private _schema : Schema | null = null;
-  public get schema(): Schema<T> { return this._schema; }
-  public set schema(value: Schema<T>) { this._schema = value; }
-
-  protected parse(data: T): T {
-    return this.schema?.parse(data) || data;
-  }
-
-  protected safeParse(data: T): { success: true; data: T; } | { success: false; error: SchemaError; data: T } {
-    return this.schema?.safeParse(data) || { success: true, data };
-  }
-
-  protected readWithSchema(item: T): Promise<T> {
-    const data: T = await this.read(item);
+  protected async readWithSchema(data: T): Promise<T | null> {
+    // const data: T | null = await this.read(id);
     try {
-      return this.parse(data);
+      return data !== null ? await this.parse(data) : data;
     } catch(error) {
-      error.data = data;
+      (error as any).data = data;
       throw error;
     }
   }
 
   create(item: T): Promise<T> {
-    return parse(item);
+    return this.parse(item);
   }
 
-  read(id: string): Promise<T | null>;
+  abstract read(id: string): Promise<T | null>;
+
   update(item: T): Promise<T> {
-    return parse(item);
-  }
-  upsert(item: T): Promise<T> {
-    return parse(item);
+    return this.parse(item);
   }
 
-  list(filter: [FilterParameter]): Promise<<T>>; // e.g. this.list({ where { userId: { equals : '7' } } } );
-  delete(id: string): Promise<any>;
+  upsert(item: T): Promise<T> {
+    return this.parse(item);
+  }
+
+  abstract list(filter: [FilterParameter]): Promise<ReadonlyArray<T>>; // e.g. this.list({ where { userId: { equals : '7' } } } );
+  abstract delete(id: string): Promise<any>;
 }
 
-//--------------------------------
+/* IDEAS:
 
-export interface Filter = {
+export interface Filter {
   where: Where
 }
 
@@ -86,47 +95,17 @@ interface Predicate {
   [index: string]: Operator;
 }
 
-export interface Where = {
-  [index: string]?: Operator;
-  AND?: Enumerable<Predicate>
-  OR?: Enumerable<Predicate>
-  NOT?: Enumerable<Predicate>
+export interface Where {
+  AND?: ReadonlyArray<Predicate>;
+  OR?: ReadonlyArray<Predicate>
+  NOT?: ReadonlyArray<Predicate>
 }
 
-export type Scalar = string | number | Date;
-
-export interface Operator = {
+export interface Operator {
   equals?: Scalar
   lt?: Scalar
   lte?: Scalar
   gt?: Scalar
   gte?: Scalar
 }
-
-// repository.list([{ orgnaization: "Buy More" }])
-
-// export type DateTimeFilter = {
-//     equals?: Date | string
-//     // in?: Enumerable<Date> | Enumerable<string>
-//     // notIn?: Enumerable<Date> | Enumerable<string>
-//     lt?: Date | string
-//     lte?: Date | string
-//     gt?: Date | string
-//     gte?: Date | string
-//     // not?: NestedDateTimeFilter | Date | string
-//   }
-
-//   export type StringFilter = {
-//     equals?: string | null
-//     // in?: Enumerable<string> | null
-//     // notIn?: Enumerable<string> | null
-//     lt?: string
-//     lte?: string
-//     gt?: string
-//     gte?: string
-//     contains?: string
-//     startsWith?: string
-//     endsWith?: string
-//     // mode?: QueryMode
-//     // not?: NestedStringNullableFilter | string | null
-//   }
+*/
