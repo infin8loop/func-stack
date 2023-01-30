@@ -1,9 +1,12 @@
 {
     "name": "core",
+    "version": "0.0.1",
     "private": true,
     "sideEffects": false,
+    "main": "dist/index.js",
     "scripts": {
-        "test": "vitest"        
+        "build": "tsc",
+        "test": "vitest"
     },
     "prettier": {},
     "eslintIgnore": [
@@ -17,11 +20,15 @@
         "bcryptjs": "2.4.3",
         "cuid": "^2.1.8",
         "isbot": "^3.5.3",
+        "nanoid": "^4.0.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "tiny-invariant": "^1.2.0"
+        "tiny-invariant": "^1.2.0",
+        "zod": "^3.20.2"
     },
     "devDependencies": {
+        "typescript": "^4.9.4",
+        "vite-node": "^0.27.3",
         "vitest": "^0.27.0"
     }
 }

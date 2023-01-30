@@ -1,12 +1,15 @@
-import { FilterParameter, Repository } from "./repository";
-import { CosmosClient, Container, CosmosClientOptions, Database, ItemDefinition, SqlParameter, ResourceResponse } from "@azure/cosmos";
+import type { FilterParameter, Repository } from "./repository";
+import type { Container, CosmosClientOptions, Database, ItemDefinition, SqlParameter} from "@azure/cosmos";
+import { CosmosClient } from "@azure/cosmos";
 
-export default abstract class CosmosRepository<T extends ItemDefinition> implements Repository<T> {
+export abstract class CosmosRepository<T extends ItemDefinition> implements Repository<T> {
     protected _client : CosmosClient | null = null;
     protected _database : Database | null = null;
     protected _container : Container | null = null;
 
-    constructor(connection: string | CosmosClientOptions | CosmosClient, protected databaseName: string, protected containerName : string) {
+    constructor(connection: string | CosmosClientOptions | CosmosClient, 
+        protected databaseName: string, protected containerName : string) {
+
         if (!this._client) {
             if (typeof connection === "string") {
                 this._client = new CosmosClient(connection as string);
@@ -51,13 +54,13 @@ export default abstract class CosmosRepository<T extends ItemDefinition> impleme
         return statusCode;
     }
 
-    protected async query(query: string, parameters: [SqlParameter]): Promise<ReadonlyArray<T>> {
-        const querySpec = { query, parameters };
+    public async query(query: string, parameters: FilterParameter): Promise<Array<T>> {
+        const querySpec = { query, parameters: CosmosRepository.queryParameters(parameters) };
         const { resources } = await this.container.items.query(querySpec).fetchAll();  
         return resources;    
     }
     
-    protected static queryParameters(filter: [FilterParameter]) : [SqlParameter] {
+    protected static queryParameters(filter: FilterParameter) : SqlParameter[] {
         throw new Error("Not implemented");
         // const result : [SqlParameter] = [];
         // for (let param in filter) {
@@ -68,7 +71,7 @@ export default abstract class CosmosRepository<T extends ItemDefinition> impleme
         // return result;
     }
 
-    public abstract list(filter: [FilterParameter]): Promise<ReadonlyArray<T>>;
+    public abstract list(filter: FilterParameter): Promise<Array<T>>;
     /* e.g. {
             return base.query(`select * from ${this.container.name} where userId=@userId`
             , CosmosRepository.queryParameters(filter)); }

@@ -1,5 +1,6 @@
 {
   "name": "grunge-stack-template",
+  "version": "0.0.1",
   "private": true,
   "sideEffects": false,
   "scripts": {
@@ -34,14 +35,13 @@
     "@remix-run/react": "*",
     "@remix-run/server-runtime": "*",
     "bcryptjs": "2.4.3",
-    "core": "file:local-packages/core",
     "cuid": "^2.1.8",
     "isbot": "^3.5.3",
-    "note": "file:local-packages/notes",
-    "notes": "file:local-packages/notes",
+    "notes": "^0.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "tiny-invariant": "^1.2.0"
+    "tiny-invariant": "^1.2.0",
+    "users": "^0.0.1"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.5.0",
@@ -75,11 +75,16 @@
     "start-server-and-test": "^1.14.0",
     "tailwindcss": "^3.1.8",
     "ts-node": "^10.9.1",
-    "typescript": "^4.8.3",
+    "typescript": "4.8",
     "vite-tsconfig-paths": "^3.5.0",
     "vitest": "^0.23.4"
   },
   "engines": {
     "node": ">=14"
-  }
+  },
+  "workspaces": [
+    "local-packages/core",
+    "local-packages/users",
+    "local-packages/notes"
+  ]
 }

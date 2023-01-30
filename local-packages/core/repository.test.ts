@@ -1,5 +1,6 @@
-import { describe, it, test, expect } from "vitest";
-import { FilterParameter, RepositoryBase, Schema } from "./repository";
+import { describe, test, expect } from "vitest";
+import type { FilterParameter, Schema } from "./repository";
+import { RepositoryBase } from "./repository";
 
 describe("RepositoryBase", () => {
     class RepoTest extends RepositoryBase<Object> {
@@ -66,4 +67,4 @@ describe("RepositoryBase", () => {
         expect(() => repo.update(invalid)).toThrow(ID_REQUIRED_ERROR);
         expect(() => repo.upsert(invalid)).toThrow(ID_REQUIRED_ERROR);
     });
-})
+});

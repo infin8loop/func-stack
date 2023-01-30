@@ -2,53 +2,48 @@ import type { ActionFunction, LoaderFunction } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { Form, useCatch, useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
-
-// import { deleteNote, getNote } from "../data";
-import { requireUserId } from "~/session.server";
-
-// import { NoteReader } from "../models";
-
+import type { Note} from "../models/note";
+import { readNote, deleteNote } from "../models/note";
+import React from "react";
 import type { EntityReader, EntityWriter } from "core";
 
-type LoaderData = {
-  note: NonNullable<Awaited<ReturnType<typeof Note>>>;
-};
-
-export const loader: LoaderFunction = (noteReader : EntityReader<Note>) => {
+// TODO: add userId as parameter
+export const loader = (reader : EntityReader<Note>): LoaderFunction => {
   return (
     async ({ request, params })  => {
-      const userId = await requireUserId(request);
+      // const userId = await requireUserId(request);
       invariant(params.noteId, "noteId not found");
     
       // const note = await getNote({ userId, id: params.noteId });
-      const note = await noteReader.read(id);
+      const note = await readNote(reader, params.noteId);
       if (!note) {
         throw new Response("Not Found", { status: 404 });
       }
-      return json<LoaderData>({ note });
+      return json<Note>(note);
     }
   );
 };
 
-export const action: ActionFunction = (noteWriter : EntityWriter<Note>) => { 
-  reutrn (
+// TODO: add userId as parameter
+export const action = (writer : EntityWriter<Note>, redirectUrl: string = "/notes"): ActionFunction => { 
+  return (
     async ({ request, params }) => {
-      const userId = await requireUserId(request);
+      // const userId = await requireUserId(request);  // TODO: include userId (in ID?)
       invariant(params.noteId, "noteId not found");
 
-      await deleteNote({ userId, id: params.noteId });
+      await deleteNote(writer, params.noteId);
 
-      return redirect("/notes");
+      return redirect(redirectUrl);
   }
 )};
 
-export default function NoteDetailsPage() {
-  const data = useLoaderData() as LoaderData;
+export function NoteDeatilsPage() {
+  const note = useLoaderData() as Note;
 
   return (
     <div>
-      <h3 className="text-2xl font-bold">{data.note.title}</h3>
-      <p className="py-6">{data.note.body}</p>
+      <h3 className="text-2xl font-bold">{note.title}</h3>
+      <p className="py-6">{note.body}</p>
       <hr className="my-4" />
       <Form method="post">
         <button

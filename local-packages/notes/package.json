@@ -1,8 +1,12 @@
 {
     "name": "notes",
+    "version": "0.0.1",
     "private": true,
     "sideEffects": false,
-    "scripts": {},
+    "main": "dist/notes/index.js",
+    "scripts": {
+        "build": "tsc"
+    },
     "prettier": {},
     "eslintIgnore": [
         "/node_modules"
@@ -12,13 +16,19 @@
         "@remix-run/node": "*",
         "@remix-run/react": "*",
         "@remix-run/server-runtime": "*",
+        "@types/react": "^18.0.26",
         "bcryptjs": "2.4.3",
-        "core": "file:/local-packages/core",
+        "core": "file:../core",
         "cuid": "^2.1.8",
         "isbot": "^3.5.3",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "tiny-invariant": "^1.2.0",
+        "users": "file:../users",
         "zod": "^3.20.2"
+    },
+    "devDependencies": {
+        "@types/node": "^18.11.18",
+        "typescript": "4.8"
     }
 }

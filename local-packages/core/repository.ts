@@ -1,11 +1,3 @@
-export type Entity = {
-    /** The id of the item. Uniquely identifies the item along with the partition key */
-    id: string;
-    /** Time to live in seconds for collections with TTL enabled */
-    ttl?: number;
-    [key: string]: any;
-}
-
 export interface EntityReader<T> {
   read(id: string): Promise<T | null>;
 }
@@ -16,11 +8,20 @@ export interface EntityWriter<T> {
   upsert(item: T): Promise<T>;
   delete(id: string): Promise<any>;
 }
-export interface EntityQuery<T> {
-  list(filter: [FilterParameter]): Promise<ReadonlyArray<T>>; // e.g. this.list({ where { userId: { equals : '7' } } } );
+export interface EntityList<T> {
+  list(filter: FilterParameter): Promise<Array<T>>; // e.g. list({ userId: 'user@example.com' } );
 }
 
-export interface Repository<T> implements EntityReader<T>, EntityWriter<T>, EntityQuery<T> {};
+export interface EntityQuery<T> {
+  query(query: string, parameters: FilterParameter): Promise<Array<T>>
+}
+
+export interface QuerySingle<T> {
+  single(filter: [FilterParameter]): Promise<T>;
+  singleOrUndefined(filter: [FilterParameter]): Promise<T | undefined>;
+}
+
+export interface Repository<T> extends EntityReader<T>, EntityWriter<T>, EntityQuery<T>, EntityList<T> {};
 
 // export interface Repository<T> {
 //   create(item: T): Promise<T>;
@@ -49,8 +50,12 @@ export interface SchemaOnReadError<T> extends SchemaError {
   data: T;
 }
 
-export abstract class RepositoryBase<T> implements Repository<T> {
+export abstract class RepositoryBase<T> implements EntityReader<T>, EntityWriter<T> {
   constructor(private schema: Schema<T> | null = null) {}
+
+  query(query: string, parameters: [FilterParameter]): Promise<readonly T[]> {
+    throw new Error("Method not implemented.");
+  }
 
   protected parse(data: T): Promise<T> {
     const result = this.schema?.parse(data) || data;
@@ -81,8 +86,9 @@ export abstract class RepositoryBase<T> implements Repository<T> {
     return this.parse(item);
   }
 
-  abstract list(filter: [FilterParameter]): Promise<ReadonlyArray<T>>; // e.g. this.list({ where { userId: { equals : '7' } } } );
   abstract delete(id: string): Promise<any>;
+
+  // abstract list(filter: [FilterParameter]): Promise<ReadonlyArray<T>>; // e.g. this.list({ where { userId: { equals : '7' } } } );
 }
 
 /* IDEAS:
